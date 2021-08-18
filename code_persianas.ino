@@ -22,7 +22,7 @@ WiFiClient espClient;
 // Instancia PubSubClient - MQTT Client
 PubSubClient client(espClient);
 // Instancia Anel led RGB
-Adafruit_NeoPixel pixels(16, 13, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel pixels(16, 05, NEO_GRB + NEO_KHZ800);
 
 /*
   ID DISPOSITIVO
@@ -74,7 +74,7 @@ void setup() {
   Serial.begin(115200);
 
   //Reset servo
-  servo.attach(D1);
+  servo.attach(D7);
   servo.write(0);
   //Reset Leds
 #if defined(__AVR_ATtiny85__) && (F_CPU == 16000000)
