@@ -49,7 +49,7 @@ char static_sn[16] = "255.255.255.0";
 #define PUB_LUZ_PORCENT     "LUZ_PORCENT"
 #define PUB_LDR             "LDR"
 #define PUB_LUMENS          "LUMENS"
-#define SUB_DEF             "DEF"
+#define SUB_DESEJADA             "DESEJADA"
 
 /*
   VARIAVEIS
@@ -58,14 +58,14 @@ int LDRInterno = 0;
 int COLOR = 0;
 int ANGULO = 0;
 int LUMENS = 0;
-int DEF = 30;
+int DESEJADA = 30;
 char buffer[5];
 
 /*
    FLAGS
 */
 bool SaveConfig = false;
-bool SendDEF = true;
+bool SendDESEJADA = true;
 
 /***************************************************************
   SETUP
@@ -128,7 +128,7 @@ void setup() {
     json["gateway"]     = WiFi.gatewayIP().toString();
     json["subnet"]      = WiFi.subnetMask().toString();
 
-    json["DEF"]         = DEF;
+    json["DESEJADA"]         = DESEJADA;
     File configFile = SPIFFS.open("/config.json", "w");
     if (!configFile) {
       Serial.println("Falha ao abrir arquivo");
@@ -157,14 +157,14 @@ void loop() {
     initMQTT();
   }
   client.loop();
-  if (SendDEF) {
-    //Envia valor do DEF para o MQTT
-    snprintf(buffer, 5, "%d", DEF);
-    client.publish(SUB_DEF, buffer);
-    SendDEF = false;
+  if (SendDESEJADA) {
+    //Envia valor do DESEJADA para o MQTT
+    snprintf(buffer, 5, "%d", DESEJADA);
+    client.publish(SUB_DESEJADA, buffer);
+    SendDESEJADA = false;
   }
   //FORÇA VALOR 0, ZERA LUZ E ANGULO
-  if (DEF == 0) {
+  if (DESEJADA == 0) {
     servo.write(0);
     LUMENS = 0;
     light("Diminui");
@@ -231,7 +231,7 @@ void initMQTT() {
     Serial.println(mqtt_server);
     if (client.connect(id_mqtt)) {
       Serial.println("Conectado com sucesso!");
-      client.subscribe(SUB_DEF);
+      client.subscribe(SUB_DESEJADA);
     }
     else {
       Serial.println("Erro ao conectar!!!");
@@ -242,7 +242,7 @@ void initMQTT() {
 }
 
 /***************************************************************
-    CALLBACK PARA RECEBER VALOR DO DEF DO MQTT
+    CALLBACK PARA RECEBER VALOR DO DESEJADA DO MQTT
 ***************************************************************/
 void mqtt_callback(char* topic, byte* payload, unsigned int length) {
 
@@ -254,7 +254,7 @@ void mqtt_callback(char* topic, byte* payload, unsigned int length) {
   }
   Serial.print("Chegou o seguinte valor via MQTT: ");
   Serial.println(msg);
-  DEF = msg.toInt();
+  DESEJADA = msg.toInt();
   saveJson();
 }
 
@@ -302,10 +302,10 @@ void setupSpiffs() {
           /*
             LIGHT
           */
-          if (json["DEF"]) {
+          if (json["DESEJADA"]) {
             Serial.println("Lendo Light do arquivo");
-            DEF = json["DEF"];
-            Serial.println(DEF);
+            DESEJADA = json["DESEJADA"];
+            Serial.println(DESEJADA);
           } else {
             Serial.println("Sem Light no arquivo");
           }
@@ -327,7 +327,7 @@ void saveJson() {
   DynamicJsonBuffer jsonBuffer;
   JsonObject& json = jsonBuffer.createObject();
   //Copiando dado para um JSON
-  json["DEF"] = DEF;
+  json["DESEJADA"] = DESEJADA;
   //Abre arquivo para escrita
   File configFile = SPIFFS.open("/config.json", "w");
   if (!configFile) {
@@ -378,13 +378,13 @@ boolean check(String str) {
   String cmp = "Igual";
   int ATUAL = int((valorLDR() * 100) / 1024);
   if (cmp.equals(str)) {
-    if (DEF == ATUAL || DEF == (ATUAL + 1) || DEF == (ATUAL - 1)) {
+    if (DESEJADA == ATUAL || DESEJADA == (ATUAL + 1) || DESEJADA == (ATUAL - 1)) {
       return true;
     } else {
       return false;
     }
   } else {
-    if (ATUAL < DEF) {
+    if (ATUAL < DESEJADA) {
       return true;
     } else {
       return false;
